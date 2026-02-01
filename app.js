@@ -17,9 +17,10 @@
 
   const $ = (id) => document.getElementById(id);
   const statusEl = $('status');
-  const lastUpdateEl = $('lastUpdate');
   const currentTempEl = $('currentTemp');
   const currentHumidityEl = $('currentHumidity');
+  const avgTemp24El = $('avgTemp24');
+  const avgHum24El = $('avgHum24');
   const btnRefresh = $('btnRefresh');
 
   function setStatus(msg, type = '') {
@@ -39,6 +40,8 @@
     const temp = parseFloat(obj.Temperature ?? obj.temperature ?? obj[1]);
     const humidity = parseFloat(obj.Humidity ?? obj.humidity ?? obj[2]);
     if (Number.isNaN(temp) || Number.isNaN(humidity)) return null;
+    // Ignore obvious bad readings (sensor off / wiring issue)
+    if (temp < -40 || temp > 80 || humidity < 0 || humidity > 100) return null;
     return { ts, temp, humidity };
   }
 
@@ -102,11 +105,11 @@
 
   function buildSingleSeriesConfig(rows, rangeMs, metric) {
     const sorted = sortByTime(rows);
-    const labels = sorted.map((r) => formatAxisLabel(r.ts, rangeMs));
+    const labels = sorted.length ? sorted.map((r) => formatAxisLabel(r.ts, rangeMs)) : [];
     const isTemp = metric === 'temp';
     const c = isTemp ? COLORS.temp : COLORS.humidity;
-    const label = isTemp ? 'Temperature °C' : 'Humidity %';
-    const values = sorted.map((r) => (isTemp ? r.temp : r.humidity));
+    const label = isTemp ? 'Temperatura °C' : 'Vlažnost %';
+    const values = sorted.length ? sorted.map((r) => (isTemp ? r.temp : r.humidity)) : [];
     const pointRadius = sorted.length > 40 ? 0 : 2;
     return {
       type: 'line',
@@ -186,31 +189,37 @@
     if (allRows.length) renderCharts();
   }
 
-  function updateCurrent() {
-    if (!allRows.length) {
-      currentTempEl.textContent = '—';
-      currentHumidityEl.textContent = '—';
-      lastUpdateEl.textContent = '—';
-      return;
-    }
+  function updateCards() {
+    const empty = '—';
+    currentTempEl.textContent = empty;
+    currentHumidityEl.textContent = empty;
+    avgTemp24El.textContent = empty;
+    avgHum24El.textContent = empty;
+    if (!allRows.length) return;
     const last = sortByTime(allRows).pop();
     currentTempEl.textContent = last.temp.toFixed(1);
     currentHumidityEl.textContent = last.humidity.toFixed(0);
-    lastUpdateEl.textContent = 'Last reading: ' + last.ts.toLocaleString();
+    const rows24h = filterSince(allRows, RANGES['24h']);
+    if (rows24h.length) {
+      const sumT = rows24h.reduce((a, r) => a + r.temp, 0);
+      const sumH = rows24h.reduce((a, r) => a + r.humidity, 0);
+      avgTemp24El.textContent = (sumT / rows24h.length).toFixed(1);
+      avgHum24El.textContent = (sumH / rows24h.length).toFixed(0);
+    }
   }
 
   function render() {
-    updateCurrent();
+    updateCards();
     renderCharts();
   }
 
   function fetchData() {
-    setStatus('Loading…', 'loading');
+    setStatus('Učitavanje…', 'loading');
     btnRefresh.disabled = true;
 
     fetch(API_URL, { method: 'GET', mode: 'cors' })
       .then((res) => {
-        if (!res.ok) throw new Error('Network ' + res.status);
+        if (!res.ok) throw new Error('Mreža ' + res.status);
         const ct = res.headers.get('content-type') || '';
         if (ct.includes('application/json')) return res.json();
         return res.text();
@@ -218,20 +227,20 @@
       .then((data) => {
         const raw = typeof data === 'string' ? data.trim() : '';
         if (raw === 'Missing parameters' || raw === 'OK') {
-          setStatus('Script returned "' + raw + '". Deploy the updated doGet (apps-script-doGet.gs) with ?action=read support and create a new deployment version.', 'error');
+          setStatus('Skripta vraća "' + raw + '". Uvedi ažurirani doGet (apps-script-doGet.gs) s podrškom za ?action=read i kreiraj novu verziju objave.', 'error');
           return;
         }
         const rows = normalizeData(data);
-        if (!rows.length) {
-          setStatus('No valid rows. Sheet needs Timestamp, Temperature, Humidity. Raw: ' + (raw.slice(0, 80) || 'empty'), 'error');
-          return;
-        }
         allRows = rows;
         render();
-        setStatus('Updated ' + new Date().toLocaleTimeString());
+        if (!rows.length) {
+          setStatus('Nema podataka. Senzor možda nije radio.');
+        } else {
+          setStatus('Ažurirano ' + new Date().toLocaleTimeString('bs-BA'));
+        }
       })
       .catch((err) => {
-        setStatus('Failed to load: ' + (err.message || 'unknown error').replace(/^Failed to fetch/i, 'Network error (CORS or unreachable).'), 'error');
+        setStatus('Greška: ' + (err.message || 'nepoznata greška').replace(/^Failed to fetch/i, 'Mrežna greška (CORS ili nedostupno).'), 'error');
         if (allRows.length) render();
       })
       .finally(() => {

@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="bs">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DHT Sensor Dashboard</title>
+  <title>Senzor temperature i vlažnosti</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Outfit:wght@300;500;700&display=swap" rel="stylesheet">
@@ -13,52 +13,56 @@
   <div class="noise"></div>
   <div class="grid-bg"></div>
 
-  <header class="header">
-    <h1 class="title">DHT Sensor</h1>
-    <p class="subtitle">Live temperature & humidity</p>
-    <div class="last-update" id="lastUpdate">—</div>
-  </header>
-
   <main class="main">
-    <section class="current">
-      <div class="current-card current-temp">
-        <span class="current-label">Temperature</span>
-        <span class="current-value" id="currentTemp">—</span>
-        <span class="current-unit">°C</span>
+    <section class="cards">
+      <div class="value-card value-temp">
+        <span class="value-label">Trenutna temperatura</span>
+        <span class="value-number" id="currentTemp">—</span>
+        <span class="value-unit">°C</span>
       </div>
-      <div class="current-card current-humidity">
-        <span class="current-label">Humidity</span>
-        <span class="current-value" id="currentHumidity">—</span>
-        <span class="current-unit">%</span>
+      <div class="value-card value-humidity">
+        <span class="value-label">Trenutna vlažnost</span>
+        <span class="value-number" id="currentHumidity">—</span>
+        <span class="value-unit">%</span>
+      </div>
+      <div class="value-card value-temp">
+        <span class="value-label">Prosječna temperatura 24h</span>
+        <span class="value-number" id="avgTemp24">—</span>
+        <span class="value-unit">°C</span>
+      </div>
+      <div class="value-card value-humidity">
+        <span class="value-label">Prosječna vlažnost 24h</span>
+        <span class="value-number" id="avgHum24">—</span>
+        <span class="value-unit">%</span>
       </div>
     </section>
 
     <section class="charts">
       <div class="chart-controls">
-        <span class="chart-controls-label">Time range</span>
-        <div class="range-btns" role="group" aria-label="Chart time range">
-          <button type="button" class="range-btn active" data-range="1h">Last hour</button>
-          <button type="button" class="range-btn" data-range="24h">Last day</button>
-          <button type="button" class="range-btn" data-range="7d">Last 7 days</button>
+        <span class="chart-controls-label">Vremenski period</span>
+        <div class="range-btns" role="group" aria-label="Vremenski period grafikona">
+          <button type="button" class="range-btn active" data-range="1h">Zadnjih sat</button>
+          <button type="button" class="range-btn" data-range="24h">Zadnjih 24h</button>
+          <button type="button" class="range-btn" data-range="7d">Zadnjih 7 dana</button>
         </div>
       </div>
       <article class="chart-card">
-        <h2 class="chart-title">Temperature</h2>
+        <h2 class="chart-title">Temperatura</h2>
         <div class="chart-wrap">
-          <canvas id="chartTemp" aria-label="Temperature over time"></canvas>
+          <canvas id="chartTemp" aria-label="Temperatura kroz vrijeme"></canvas>
         </div>
       </article>
       <article class="chart-card">
-        <h2 class="chart-title">Humidity</h2>
+        <h2 class="chart-title">Vlažnost</h2>
         <div class="chart-wrap">
-          <canvas id="chartHumidity" aria-label="Humidity over time"></canvas>
+          <canvas id="chartHumidity" aria-label="Vlažnost kroz vrijeme"></canvas>
         </div>
       </article>
     </section>
   </main>
 
   <footer class="footer">
-    <button type="button" class="btn-refresh" id="btnRefresh" aria-label="Refresh data">Refresh</button>
+    <button type="button" class="btn-refresh" id="btnRefresh" aria-label="Osvježi podatke">Osvježi</button>
     <p class="status" id="status"></p>
   </footer>
 
