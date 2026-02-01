@@ -1,0 +1,294 @@
+:root {
+  --bg: #0a0c10;
+  --bg-card: rgba(18, 22, 28, 0.85);
+  --bg-card-border: rgba(255, 255, 255, 0.06);
+  --text: #e8eaed;
+  --text-muted: #9aa0a6;
+  --accent-temp: #ff6b4a;
+  --accent-temp-glow: rgba(255, 107, 74, 0.35);
+  --accent-humidity: #4fc3f7;
+  --accent-humidity-glow: rgba(79, 195, 247, 0.35);
+  --font-sans: 'Outfit', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --radius: 16px;
+  --radius-sm: 10px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: var(--font-sans);
+  background: var(--bg);
+  color: var(--text);
+  position: relative;
+  overflow-x: hidden;
+}
+
+.noise {
+  position: fixed;
+  inset: 0;
+  opacity: 0.03;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  z-index: 0;
+}
+
+.grid-bg {
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+  background-size: 48px 48px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.header {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  padding: 2.5rem 1rem 1.5rem;
+}
+
+.title {
+  font-family: var(--font-mono);
+  font-size: clamp(1.75rem, 4vw, 2.25rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0 0 0.25rem;
+  background: linear-gradient(135deg, #fff 0%, var(--text-muted) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.subtitle {
+  font-size: 0.95rem;
+  font-weight: 300;
+  color: var(--text-muted);
+  margin: 0 0 0.5rem;
+}
+
+.last-update {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.main {
+  position: relative;
+  z-index: 1;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 1rem 2rem;
+}
+
+.current {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.current-card {
+  background: var(--bg-card);
+  border: 1px solid var(--bg-card-border);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  backdrop-filter: blur(12px);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.current-card:hover {
+  transform: translateY(-2px);
+}
+
+.current-temp {
+  box-shadow: 0 0 0 1px rgba(255, 107, 74, 0.1);
+}
+
+.current-temp:hover {
+  box-shadow: 0 8px 32px var(--accent-temp-glow);
+}
+
+.current-humidity {
+  box-shadow: 0 0 0 1px rgba(79, 195, 247, 0.1);
+}
+
+.current-humidity:hover {
+  box-shadow: 0 8px 32px var(--accent-humidity-glow);
+}
+
+.current-label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  margin-bottom: 0.35rem;
+}
+
+.current-temp .current-label { color: var(--accent-temp); }
+.current-humidity .current-label { color: var(--accent-humidity); }
+
+.current-value {
+  font-family: var(--font-mono);
+  font-size: clamp(2.5rem, 6vw, 3.5rem);
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.current-temp .current-value { color: var(--accent-temp); }
+.current-humidity .current-value { color: var(--accent-humidity); }
+
+.current-unit {
+  font-family: var(--font-mono);
+  font-size: 1.25rem;
+  font-weight: 600;
+  opacity: 0.8;
+  margin-left: 0.2rem;
+}
+
+.charts {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.chart-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1rem;
+}
+
+.chart-controls-label {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.range-btns {
+  display: flex;
+  gap: 0.25rem;
+  background: var(--bg-card);
+  border: 1px solid var(--bg-card-border);
+  border-radius: var(--radius-sm);
+  padding: 0.25rem;
+  backdrop-filter: blur(8px);
+}
+
+.range-btn {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem 0.85rem;
+  cursor: pointer;
+  transition: color 0.2s, background 0.2s;
+}
+
+.range-btn:hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.range-btn.active {
+  color: var(--bg);
+  background: var(--text-muted);
+}
+
+.chart-card {
+  background: var(--bg-card);
+  border: 1px solid var(--bg-card-border);
+  border-radius: var(--radius);
+  padding: 1.25rem 1.5rem;
+  backdrop-filter: blur(12px);
+}
+
+.chart-title {
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin: 0 0 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.chart-wrap {
+  position: relative;
+  height: 220px;
+}
+
+.chart-wrap canvas {
+  max-height: 220px;
+}
+
+.footer {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  padding: 1rem;
+}
+
+.btn-refresh {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: transparent;
+  border: 1px solid var(--bg-card-border);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
+}
+
+.btn-refresh:hover {
+  color: var(--text);
+  border-color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.btn-refresh:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.status {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin: 0.5rem 0 0;
+}
+
+.status.error { color: #ef5350; }
+.status.loading { color: var(--accent-humidity); }
+
+@media (min-width: 640px) {
+  .chart-wrap {
+    height: 260px;
+  }
+  .chart-wrap canvas {
+    max-height: 260px;
+  }
+}

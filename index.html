@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DHT Sensor Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Outfit:wght@300;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="noise"></div>
+  <div class="grid-bg"></div>
+
+  <header class="header">
+    <h1 class="title">DHT Sensor</h1>
+    <p class="subtitle">Live temperature & humidity</p>
+    <div class="last-update" id="lastUpdate">—</div>
+  </header>
+
+  <main class="main">
+    <section class="current">
+      <div class="current-card current-temp">
+        <span class="current-label">Temperature</span>
+        <span class="current-value" id="currentTemp">—</span>
+        <span class="current-unit">°C</span>
+      </div>
+      <div class="current-card current-humidity">
+        <span class="current-label">Humidity</span>
+        <span class="current-value" id="currentHumidity">—</span>
+        <span class="current-unit">%</span>
+      </div>
+    </section>
+
+    <section class="charts">
+      <div class="chart-controls">
+        <span class="chart-controls-label">Time range</span>
+        <div class="range-btns" role="group" aria-label="Chart time range">
+          <button type="button" class="range-btn active" data-range="1h">Last hour</button>
+          <button type="button" class="range-btn" data-range="24h">Last day</button>
+          <button type="button" class="range-btn" data-range="7d">Last 7 days</button>
+        </div>
+      </div>
+      <article class="chart-card">
+        <h2 class="chart-title">Temperature</h2>
+        <div class="chart-wrap">
+          <canvas id="chartTemp" aria-label="Temperature over time"></canvas>
+        </div>
+      </article>
+      <article class="chart-card">
+        <h2 class="chart-title">Humidity</h2>
+        <div class="chart-wrap">
+          <canvas id="chartHumidity" aria-label="Humidity over time"></canvas>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <button type="button" class="btn-refresh" id="btnRefresh" aria-label="Refresh data">Refresh</button>
+    <p class="status" id="status"></p>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
