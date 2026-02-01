@@ -6,13 +6,14 @@
 
   const COLORS = {
     temp: { border: '#ff6b4a', fill: 'rgba(255, 107, 74, 0.12)' },
-    humidity: { border: '#4fc3f7', fill: 'rgba(79, 195, 247, 0.12)' }
+    humidity: { border: '#4fc3f7', fill: 'rgba(79, 195, 247, 0.12)' },
+    battery: { border: '#ffc107', fill: 'rgba(255, 193, 7, 0.12)' }
   };
 
   const RANGES = { '1h': 3600000, '24h': 86400000, '7d': 604800000 };
 
   let allRows = [];
-  let charts = { temp: null, humidity: null };
+  let charts = { temp: null, humidity: null, battery: null };
   let selectedRange = '1h';
 
   const $ = (id) => document.getElementById(id);
@@ -188,10 +189,20 @@
     const sorted = sortByTime(rows);
     const labels = sorted.length ? sorted.map((r) => formatAxisLabel(r.ts, rangeMs)) : [];
     const isTemp = metric === 'temp';
-    const c = isTemp ? COLORS.temp : COLORS.humidity;
-    const label = isTemp ? 'Temperatura °C' : 'Vlažnost %';
-    const values = sorted.length ? sorted.map((r) => (isTemp ? r.temp : r.humidity)) : [];
+    const isBattery = metric === 'battery';
+    const c = isTemp ? COLORS.temp : isBattery ? COLORS.battery : COLORS.humidity;
+    const label = isTemp ? 'Temperatura °C' : isBattery ? 'Baterija %' : 'Vlažnost %';
+    const values = sorted.length
+      ? sorted.map((r) => (isTemp ? r.temp : isBattery ? (r.battery != null ? r.battery : null) : r.humidity))
+      : [];
     const pointRadius = sorted.length > 40 ? 0 : 2;
+    let yMin = 0;
+    let yMax = undefined;
+    if (metric === 'temp') yMin = -10;
+    if (metric === 'battery') {
+      yMin = 0;
+      yMax = 100;
+    }
     return {
       type: 'line',
       data: {
@@ -205,7 +216,8 @@
           fill: true,
           tension: 0.35,
           pointRadius,
-          pointHoverRadius: 4
+          pointHoverRadius: 4,
+          spanGaps: false
         }]
       },
       options: {
@@ -230,7 +242,8 @@
           y: {
             grid: { color: 'rgba(255,255,255,0.06)' },
             ticks: { color: '#9aa0a6', font: { size: 10 } },
-            min: metric === 'temp' ? -10 : 0
+            min: yMin,
+            max: yMax
           }
         }
       }
@@ -250,6 +263,7 @@
 
     destroyChart('temp');
     destroyChart('humidity');
+    destroyChart('battery');
 
     charts.temp = new Chart(
       document.getElementById('chartTemp').getContext('2d'),
@@ -258,6 +272,10 @@
     charts.humidity = new Chart(
       document.getElementById('chartHumidity').getContext('2d'),
       buildSingleSeriesConfig(rows, rangeMs, 'humidity')
+    );
+    charts.battery = new Chart(
+      document.getElementById('chartBattery').getContext('2d'),
+      buildSingleSeriesConfig(rows, rangeMs, 'battery')
     );
   }
 
