@@ -1,7 +1,7 @@
 /**
  * Web app: write (ESP) and read (dashboard).
- * - GET ?temp=25&hum=60  → append row, return "OK"
- * - GET ?action=read     → return sheet data as JSON for dashboard
+ * - GET ?temp=25&hum=60&batt=87 → append row, return "OK"
+ * - GET ?action=read            → return sheet data as JSON
  * Deploy as Web app, Execute as me, Who has access: Anyone.
  */
 function doGet(e) {
@@ -9,8 +9,12 @@ function doGet(e) {
   var params = e.parameter || {};
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
 
-  // Read mode: .../exec?action=read OR .../exec (no params)
-  var wantRead = params.action === 'read' || params.Action === 'read' || (!params.temp && !params.hum);
+  // ===== READ MODE =====
+  var wantRead =
+    params.action === 'read' ||
+    params.Action === 'read' ||
+    (!params.temp && !params.hum);
+
   if (wantRead) {
     var data = sheet.getDataRange().getValues();
     if (!data.length) {
@@ -18,12 +22,19 @@ function doGet(e) {
         .createTextOutput(JSON.stringify([]))
         .setMimeType(ContentService.MimeType.JSON);
     }
-    // If first cell is a Date or number, sheet has no header row — use default column names
+
     var firstCell = data[0][0];
-    var noHeaderRow = firstCell instanceof Date || (typeof firstCell === 'number' && !isNaN(firstCell));
-    var headers = noHeaderRow ? ['Timestamp', 'Temperature', 'Humidity'] : data[0];
+    var noHeaderRow =
+      firstCell instanceof Date ||
+      (typeof firstCell === 'number' && !isNaN(firstCell));
+
+    var headers = noHeaderRow
+      ? ['Timestamp', 'Temperature', 'Humidity', 'Battery']
+      : data[0];
+
     var startRow = noHeaderRow ? 0 : 1;
     var out = [];
+
     for (var i = startRow; i < data.length; i++) {
       var row = {};
       for (var j = 0; j < headers.length; j++) {
@@ -33,14 +44,16 @@ function doGet(e) {
       }
       out.push(row);
     }
+
     return ContentService
       .createTextOutput(JSON.stringify(out))
       .setMimeType(ContentService.MimeType.JSON);
   }
 
-  // Write mode: ESP (or anything) sends ?temp=...&hum=...
+  // ===== WRITE MODE =====
   var temp = params.temp;
-  var hum = params.hum;
+  var hum  = params.hum;
+  var batt = params.batt;
 
   if (!temp || !hum) {
     return ContentService
@@ -48,7 +61,12 @@ function doGet(e) {
       .setMimeType(ContentService.MimeType.TEXT);
   }
 
-  sheet.appendRow([new Date(), Number(temp), Number(hum)]);
+  sheet.appendRow([
+    new Date(),
+    Number(temp),
+    Number(hum),
+    batt !== undefined ? Number(batt) : ''
+  ]);
 
   return ContentService
     .createTextOutput('OK')

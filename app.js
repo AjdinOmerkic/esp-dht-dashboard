@@ -21,6 +21,10 @@
   const currentHumidityEl = $('currentHumidity');
   const avgTemp24El = $('avgTemp24');
   const avgHum24El = $('avgHum24');
+  const arrowTemp24El = $('arrowTemp24');
+  const arrowHum24El = $('arrowHum24');
+  const batteryPctEl = $('batteryPct');
+  const batteryEmojiEl = $('batteryEmoji');
   const airScoreEl = $('airScore');
   const airEmojiEl = $('airEmoji');
   const airLabelEl = $('airLabel');
@@ -113,7 +117,10 @@
     if (Number.isNaN(temp) || Number.isNaN(humidity)) return null;
     // Ignore obvious bad readings (sensor off / wiring issue)
     if (temp < -40 || temp > 80 || humidity < 0 || humidity > 100) return null;
-    return { ts, temp, humidity };
+    const rawBatt = obj.Battery ?? obj.battery ?? obj[3];
+    const battery = rawBatt === '' || rawBatt == null ? null : parseFloat(rawBatt);
+    const batteryPct = battery != null && !Number.isNaN(battery) && battery >= 0 && battery <= 100 ? battery : null;
+    return { ts, temp, humidity, battery: batteryPct };
   }
 
   function parseCSV(text) {
@@ -124,15 +131,18 @@
     const tsIdx = cols.indexOf('timestamp');
     const tempIdx = cols.indexOf('temperature');
     const humIdx = cols.indexOf('humidity');
+    const battIdx = cols.indexOf('battery');
     if (tsIdx < 0 || tempIdx < 0 || humIdx < 0) return [];
     const rows = [];
     for (let i = 1; i < lines.length; i++) {
       const cells = lines[i].split(sep).map((c) => c.trim());
-      const row = parseRow({
+      const obj = {
         Timestamp: cells[tsIdx],
         Temperature: cells[tempIdx],
         Humidity: cells[humIdx]
-      });
+      };
+      if (battIdx >= 0) obj.Battery = cells[battIdx];
+      const row = parseRow(obj);
       if (row) rows.push(row);
     }
     return rows;
@@ -267,6 +277,8 @@
     avgTemp24El.textContent = empty;
     avgHum24El.textContent = empty;
     lastMeasurementEl.textContent = 'Zadnje mjerenje: —';
+    batteryPctEl.textContent = '—';
+    batteryEmojiEl.textContent = '—';
     airScoreEl.textContent = '—';
     airEmojiEl.textContent = '—';
     airLabelEl.textContent = '—';
@@ -274,6 +286,10 @@
     const last = sortByTime(allRows).pop();
     currentTempEl.textContent = last.temp.toFixed(1);
     currentHumidityEl.textContent = last.humidity.toFixed(0);
+    if (last.battery != null) {
+      batteryPctEl.textContent = Math.round(last.battery);
+      batteryEmojiEl.textContent = last.battery <= 10 ? '🪫' : last.battery < 20 ? '🪫' : '🔋';
+    }
     const air = airQualityScore(last.temp, last.humidity);
     if (air.score != null) {
       airScoreEl.textContent = air.score;
@@ -285,11 +301,32 @@
       timeStyle: 'medium'
     });
     const rows24h = filterSince(allRows, RANGES['24h']);
+    arrowTemp24El.textContent = '';
+    arrowTemp24El.className = 'arrow-hint';
+    arrowHum24El.textContent = '';
+    arrowHum24El.className = 'arrow-hint';
     if (rows24h.length) {
       const sumT = rows24h.reduce((a, r) => a + r.temp, 0);
       const sumH = rows24h.reduce((a, r) => a + r.humidity, 0);
-      avgTemp24El.textContent = (sumT / rows24h.length).toFixed(1);
-      avgHum24El.textContent = (sumH / rows24h.length).toFixed(0);
+      const avgT = sumT / rows24h.length;
+      const avgH = sumH / rows24h.length;
+      avgTemp24El.textContent = avgT.toFixed(1);
+      avgHum24El.textContent = avgH.toFixed(0);
+      // Strelice: ideal temp 18–24°C, ideal vlažnost 35–50%
+      if (avgT < 18) {
+        arrowTemp24El.textContent = '↑ Povećaj';
+        arrowTemp24El.className = 'arrow-hint arrow-up ' + (avgT < 15 ? 'arrow-red' : 'arrow-green');
+      } else if (avgT > 24) {
+        arrowTemp24El.textContent = '↓ Smanji';
+        arrowTemp24El.className = 'arrow-hint arrow-down ' + (avgT > 27 ? 'arrow-red' : 'arrow-green');
+      }
+      if (avgH < 35) {
+        arrowHum24El.textContent = '↑ Povećaj';
+        arrowHum24El.className = 'arrow-hint arrow-up ' + (avgH < 25 ? 'arrow-red' : 'arrow-green');
+      } else if (avgH > 50) {
+        arrowHum24El.textContent = '↓ Smanji';
+        arrowHum24El.className = 'arrow-hint arrow-down ' + (avgH > 65 ? 'arrow-red' : 'arrow-green');
+      }
     }
   }
 

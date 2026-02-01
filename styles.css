@@ -111,6 +111,34 @@ body {
   box-shadow: 0 8px 32px var(--accent-humidity-glow);
 }
 
+.value-battery {
+  box-shadow: 0 0 0 1px rgba(255, 193, 7, 0.2);
+}
+
+.value-battery:hover {
+  box-shadow: 0 8px 32px rgba(255, 193, 7, 0.2);
+}
+
+.value-battery .value-label {
+  color: #ffc107;
+}
+
+.battery-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.battery-emoji {
+  font-size: 1.75rem;
+  line-height: 1;
+}
+
+.value-battery .value-number {
+  color: #ffca28;
+}
+
 .value-air {
   box-shadow: 0 0 0 1px rgba(160, 200, 120, 0.2);
 }
@@ -175,6 +203,23 @@ body {
   font-weight: 600;
   opacity: 0.8;
   margin-left: 0.2rem;
+}
+
+.arrow-hint {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-top: 0.5rem;
+  min-height: 1.25em;
+}
+
+.arrow-hint.arrow-green {
+  color: #81c784;
+}
+
+.arrow-hint.arrow-red {
+  color: #e57373;
 }
 
 .charts {
