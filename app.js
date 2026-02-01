@@ -21,7 +21,78 @@
   const currentHumidityEl = $('currentHumidity');
   const avgTemp24El = $('avgTemp24');
   const avgHum24El = $('avgHum24');
+  const airScoreEl = $('airScore');
+  const airEmojiEl = $('airEmoji');
+  const airLabelEl = $('airLabel');
+  const lastMeasurementEl = $('lastMeasurement');
   const btnRefresh = $('btnRefresh');
+
+  /**
+   * Ocjena zraka 0–10 na osnovu temperature i vlažnosti (udobnost / suhoća-zraka).
+   * Idealno: vlažnost 35–50%, temp 18–24°C. Suh/vlažan zrak i ekstremna temp utječu na ocjenu i label.
+   */
+  function airQualityScore(temp, humidity) {
+    if (temp == null || humidity == null || Number.isNaN(temp) || Number.isNaN(humidity)) {
+      return { score: null, label: '—', emoji: '—' };
+    }
+    let score = 5;
+    let label = 'Zrak umjeren';
+    let emoji = '😐';
+    if (humidity < 15) {
+      score = Math.max(0, 2 - (15 - humidity) / 5);
+      label = humidity < 8 ? 'Zrak opasno suh' : humidity < 12 ? 'Zrak izuzetno suh' : 'Zrak suh';
+      emoji = humidity < 8 ? '⚠️' : humidity < 12 ? '😟' : '😕';
+    } else if (humidity < 30) {
+      score = 2 + (humidity - 15) / 5;
+      label = humidity < 22 ? 'Zrak izuzetno suh' : 'Zrak suh';
+      emoji = humidity < 22 ? '😕' : '😐';
+    } else if (humidity <= 55) {
+      score = 6 + (4 * (1 - Math.abs(humidity - 42) / 20));
+      if (temp >= 18 && temp <= 24) score = Math.min(10, score + 1);
+      else if (temp >= 15 && temp <= 27) score = Math.min(10, score + 0.5);
+      else if (temp < 10 || temp > 30) score = Math.max(0, score - 1.5);
+      if (score >= 8.5) { label = 'Zrak ugodan'; emoji = '😊'; }
+      else if (score >= 7) { label = 'Zrak ugodan'; emoji = '🙂'; }
+      else { label = 'Zrak umjeren'; emoji = '😐'; }
+    } else if (humidity <= 75) {
+      score = 6 - (humidity - 55) / 10;
+      label = humidity <= 62 ? 'Zrak vlažan' : 'Zrak izuzetno vlažan';
+      emoji = humidity <= 62 ? '😐' : '😕';
+    } else {
+      score = Math.max(0, 3 - (humidity - 75) / 15);
+      label = humidity > 85 ? 'Zrak opasno vlažan' : 'Zrak izuzetno vlažan';
+      emoji = humidity > 85 ? '⚠️' : '😟';
+    }
+    // Preuzimanje po temperaturi: prevruće / hladno
+    if (temp >= 35) {
+      label = 'Prevruće';
+      emoji = '🔥';
+      score = Math.min(score, 1);
+    } else if (temp >= 30) {
+      label = 'Prevruće';
+      emoji = '🔥';
+      score = Math.min(score, 3);
+    } else if (temp >= 28) {
+      label = 'Vruće';
+      emoji = '🌡️';
+      score = Math.min(score, 5);
+    } else if (temp <= -5) {
+      label = 'Izuzetno hladno';
+      emoji = '❄️';
+      score = Math.min(score, 1);
+    } else if (temp <= 5) {
+      label = 'Hladno';
+      emoji = '❄️';
+      score = Math.min(score, 4);
+    } else if (temp <= 10) {
+      label = 'Blago hladno';
+      emoji = '🥶';
+      score = Math.min(score, 6);
+    }
+    score = Math.round(Math.max(0, Math.min(10, score)));
+    if (score <= 2 && emoji === '😐') emoji = '😟';
+    return { score, label, emoji };
+  }
 
   function setStatus(msg, type = '') {
     statusEl.textContent = msg;
@@ -149,7 +220,7 @@
           y: {
             grid: { color: 'rgba(255,255,255,0.06)' },
             ticks: { color: '#9aa0a6', font: { size: 10 } },
-            min: 0
+            min: metric === 'temp' ? -10 : 0
           }
         }
       }
@@ -195,10 +266,24 @@
     currentHumidityEl.textContent = empty;
     avgTemp24El.textContent = empty;
     avgHum24El.textContent = empty;
+    lastMeasurementEl.textContent = 'Zadnje mjerenje: —';
+    airScoreEl.textContent = '—';
+    airEmojiEl.textContent = '—';
+    airLabelEl.textContent = '—';
     if (!allRows.length) return;
     const last = sortByTime(allRows).pop();
     currentTempEl.textContent = last.temp.toFixed(1);
     currentHumidityEl.textContent = last.humidity.toFixed(0);
+    const air = airQualityScore(last.temp, last.humidity);
+    if (air.score != null) {
+      airScoreEl.textContent = air.score;
+      airEmojiEl.textContent = air.emoji;
+      airLabelEl.textContent = air.label;
+    }
+    lastMeasurementEl.textContent = 'Zadnje mjerenje: ' + last.ts.toLocaleString('bs-BA', {
+      dateStyle: 'medium',
+      timeStyle: 'medium'
+    });
     const rows24h = filterSince(allRows, RANGES['24h']);
     if (rows24h.length) {
       const sumT = rows24h.reduce((a, r) => a + r.temp, 0);

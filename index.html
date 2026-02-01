@@ -35,6 +35,15 @@
         <span class="value-number" id="avgHum24">—</span>
         <span class="value-unit">%</span>
       </div>
+      <div class="value-card value-air">
+        <span class="value-label">Ocjena zraka</span>
+        <div class="air-row">
+          <span class="air-emoji" id="airEmoji" aria-hidden="true">—</span>
+          <span class="value-number value-air-score" id="airScore">—</span>
+          <span class="value-unit">/10</span>
+        </div>
+        <span class="air-label" id="airLabel">—</span>
+      </div>
     </section>
 
     <section class="charts">
@@ -62,6 +71,7 @@
   </main>
 
   <footer class="footer">
+    <p class="last-measurement" id="lastMeasurement">Zadnje mjerenje: —</p>
     <button type="button" class="btn-refresh" id="btnRefresh" aria-label="Osvježi podatke">Osvježi</button>
     <p class="status" id="status"></p>
   </footer>

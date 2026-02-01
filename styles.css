@@ -70,6 +70,18 @@ body {
   margin-bottom: 2rem;
 }
 
+@media (min-width: 640px) {
+  .cards {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 900px) {
+  .cards {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
 .value-card {
   background: var(--bg-card);
   border: 1px solid var(--bg-card-border);
@@ -97,6 +109,41 @@ body {
 
 .value-humidity:hover {
   box-shadow: 0 8px 32px var(--accent-humidity-glow);
+}
+
+.value-air {
+  box-shadow: 0 0 0 1px rgba(160, 200, 120, 0.2);
+}
+
+.value-air:hover {
+  box-shadow: 0 8px 32px rgba(160, 200, 120, 0.2);
+}
+
+.value-air .value-label {
+  color: #9ccc65;
+}
+
+.air-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.air-emoji {
+  font-size: 1.75rem;
+  line-height: 1;
+}
+
+.value-air .value-number.value-air-score {
+  color: #c5e1a5;
+}
+
+.air-label {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 0.35rem;
 }
 
 .value-label {
@@ -217,6 +264,13 @@ body {
   z-index: 1;
   text-align: center;
   padding: 1rem;
+}
+
+.last-measurement {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin: 0 0 0.75rem;
 }
 
 .btn-refresh {
